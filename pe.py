@@ -1,4 +1,4 @@
-﻿import streamlit as st
+import streamlit as st
 import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
@@ -48,16 +48,18 @@ st.set_page_config(
     layout="wide",
 )
 
-
-FEATURES = ["platelet", "inr", "aptt", "fibrinogen"]
-TARGET = "preeclampsia severe"
+# ── Değişen kısım: sütun adları güncellendi ──────────────────────────────────
+FEATURES = ["f_platelet", "f_inr", "f_aptt", "f_fibrinogen"]
+TARGET = "target"
 MODEL_VERSION = "v1.1"
 FEATURE_LABELS = {
-    "platelet": "Trombosit",
-    "inr": "INR",
-    "aptt": "aPTT",
-    "fibrinogen": "Fibrinojen",
+    "f_platelet": "Trombosit",
+    "f_inr": "INR",
+    "f_aptt": "aPTT",
+    "f_fibrinogen": "Fibrinojen",
 }
+# ─────────────────────────────────────────────────────────────────────────────
+
 ACOG_CHECKLIST = [
     ("acog_bp", "Kan Basıncı ≥160/110 mmHg"),
     ("acog_plt_low", "Trombosit <100,000/µL"),
@@ -68,10 +70,10 @@ ACOG_CHECKLIST = [
 ]
 
 DATA_DICTIONARY = [
-    ("platelet", "Trombosit", "/µL", "Koagülasyon ve hematolojik durum için kullanılan trombosit sayısı."),
-    ("inr", "INR", "oran", "Protrombin zamanı temelli pıhtılaşma göstergesi."),
-    ("aptt", "aPTT", "saniye", "İntrinsik koagülasyon yolunu yansıtan süre ölçümü."),
-    ("fibrinogen", "Fibrinojen", "mg/dL", "Koagülasyon sisteminde yer alan plazma proteini."),
+    ("f_platelet", "Trombosit", "/µL", "Koagülasyon ve hematolojik durum için kullanılan trombosit sayısı."),
+    ("f_inr", "INR", "oran", "Protrombin zamanı temelli pıhtılaşma göstergesi."),
+    ("f_aptt", "aPTT", "saniye", "İntrinsik koagülasyon yolunu yansıtan süre ölçümü."),
+    ("f_fibrinogen", "Fibrinojen", "mg/dL", "Koagülasyon sisteminde yer alan plazma proteini."),
     (TARGET, "Şiddetli preeklampsi", "0/1", "Modelin tahmin etmeye çalıştığı hedef değişken."),
 ]
 
@@ -98,7 +100,6 @@ T = {
         "tabs": ["Risk Hesaplayıcı", "Klinik Özet", "ACOG", "Açıklanabilirlik",
                  "Toplu Tahmin", "Model Karşılaştırma", "Kalibrasyon ve Fayda",
                  "Veri ve Trend", "PDF Raporu", "Metodoloji"],
-        # Tab 1
         "patient_info": "Hasta Bilgileri",
         "patient_id": "Hasta ID / Protokol No",
         "age": "Yaş",
@@ -118,7 +119,6 @@ T = {
         "risk_ratio": "Risk Oranı",
         "category_label": "Kategori",
         "threshold_label": "Eşik",
-        # Tab 2
         "clinical_summary_title": "Kombine Klinik Özet",
         "risk_category_label": "Risk kategorisi",
         "model_label": "Model",
@@ -128,7 +128,6 @@ T = {
         "low_risk": "Düşük Risk",
         "acog_positive": "Şiddetli özellik mevcut",
         "acog_negative": "Seçili şiddetli özellik yok",
-        # Tab 3
         "acog_title": "ACOG Şiddetli Özellikler Kontrol Listesi",
         "acog_bp": "Kan Basıncı ≥160/110 mmHg",
         "acog_plt": "Trombosit <100,000/µL",
@@ -138,27 +137,23 @@ T = {
         "acog_neuro": "Nörolojik semptomlar",
         "acog_alert": "En az bir ACOG şiddetli özelliği mevcut.",
         "acog_ok": "Seçili ACOG şiddetli özelliği bulunmuyor.",
-        # Tab 4
         "shap_title": "Yapay Zeka Açıklanabilirlik",
         "shap_btn": "🔍 Karar Analizini Başlat (SHAP)",
         "shap_spinner": "Hesaplanıyor...",
         "shap_no_pkg": "SHAP grafikleri için `shap` paketi yüklü olmalı. Kurulum: `pip install shap`",
         "shap_info": "Analizi görmek için yukarıdaki butona tıklayın. Bu işlem işlemciyi yorabilir.",
-        # Tab 5
         "bulk_title": "Çoklu Hasta Tahmini",
-        "bulk_caption": "CSV veya Excel dosyasında şu sütunlar bulunmalı: platelet, inr, aptt, fibrinogen",
+        "bulk_caption": "CSV veya Excel dosyasında şu sütunlar bulunmalı: f_platelet, f_inr, f_aptt, f_fibrinogen",
         "bulk_upload": "Hasta veri dosyası yükle",
         "bulk_csv_btn": "Sonuçları CSV olarak indir",
         "bulk_excel_btn": "Sonuçları Excel olarak indir",
         "bulk_excel_info": "Excel çıktısı için `openpyxl` paketi gerekir. CSV çıktısı hazır.",
         "bulk_error": "Toplu tahmin yapılamadı",
-        # Tab 6
         "compare_title": "Model Karşılaştırma",
         "compare_btn": "Model Karşılaştırmayı Başlat",
         "compare_spinner": "Modeller karşılaştırılıyor...",
         "compare_info": "Karşılaştırmayı görmek için yukarıdaki butona tıklayın.",
         "xgb_info": "XGBoost yüklü değilse karşılaştırmaya dahil edilmez. Kurulum: `pip install xgboost`",
-        # Tab 7
         "calib_title": "Kalibrasyon Grafiği",
         "calib_xlabel": "Ortalama tahmin edilen risk",
         "calib_ylabel": "Gözlenen pozitif oran",
@@ -170,7 +165,6 @@ T = {
         "dca_model": "Model",
         "dca_treat_all": "Herkesi yüksek risk kabul et",
         "dca_treat_none": "Hiçbirini yüksek risk kabul et",
-        # Tab 8
         "data_title": "Veri Seti Analiz Paneli",
         "data_total": "Toplam satır",
         "data_model": "Model satırı",
@@ -186,13 +180,11 @@ T = {
         "trend_error": "Trend dosyası okunamadı",
         "trend_time": "Zaman",
         "trend_value": "Değer",
-        # Tab 9
         "pdf_title": "PDF Raporu",
         "pdf_model_perf": "Model Performansı",
         "pdf_include_shap": "PDF'ye SHAP grafiğini ekle",
         "pdf_create_btn": "Raporu Oluştur",
         "pdf_download_btn": "PDF Dosyasını İndir",
-        # Tab 10
         "method_title": "Metodoloji",
         "method_text": ("Bu araştırma prototipi platelet, INR, aPTT ve fibrinojen değerlerini kullanarak şiddetli preeklampsi riskini tahmin eder. "
                         "Birincil model lojistik regresyondur. Eğitim setindeki sınıf dengesizliğini azaltmak için SMOTE uygulanır; "
@@ -212,7 +204,6 @@ T = {
         "tabs": ["Risk Calculator", "Clinical Summary", "ACOG", "Explainability",
                  "Batch Prediction", "Model Comparison", "Calibration & Utility",
                  "Data & Trends", "PDF Report", "Methodology"],
-        # Tab 1
         "patient_info": "Patient Information",
         "patient_id": "Patient ID / Protocol No",
         "age": "Age",
@@ -232,7 +223,6 @@ T = {
         "risk_ratio": "Risk Score",
         "category_label": "Category",
         "threshold_label": "Threshold",
-        # Tab 2
         "clinical_summary_title": "Combined Clinical Summary",
         "risk_category_label": "Risk category",
         "model_label": "Model",
@@ -242,7 +232,6 @@ T = {
         "low_risk": "Low Risk",
         "acog_positive": "Severe feature present",
         "acog_negative": "No selected severe feature",
-        # Tab 3
         "acog_title": "ACOG Severe Features Checklist",
         "acog_bp": "Blood Pressure ≥160/110 mmHg",
         "acog_plt": "Platelet <100,000/µL",
@@ -252,27 +241,23 @@ T = {
         "acog_neuro": "Neurological symptoms",
         "acog_alert": "At least one ACOG severe feature is present.",
         "acog_ok": "No selected ACOG severe feature.",
-        # Tab 4
         "shap_title": "AI Explainability",
         "shap_btn": "🔍 Start Decision Analysis (SHAP)",
         "shap_spinner": "Calculating...",
         "shap_no_pkg": "The `shap` package is required for SHAP charts. Install: `pip install shap`",
         "shap_info": "Click the button above to see the analysis. This may take a moment.",
-        # Tab 5
         "bulk_title": "Batch Patient Prediction",
-        "bulk_caption": "CSV or Excel file must contain columns: platelet, inr, aptt, fibrinogen",
+        "bulk_caption": "CSV or Excel file must contain columns: f_platelet, f_inr, f_aptt, f_fibrinogen",
         "bulk_upload": "Upload patient data file",
         "bulk_csv_btn": "Download results as CSV",
         "bulk_excel_btn": "Download results as Excel",
         "bulk_excel_info": "`openpyxl` is required for Excel output. CSV is ready.",
         "bulk_error": "Batch prediction failed",
-        # Tab 6
         "compare_title": "Model Comparison",
         "compare_btn": "Start Model Comparison",
         "compare_spinner": "Comparing models...",
         "compare_info": "Click the button above to see the comparison.",
         "xgb_info": "XGBoost will not be included if not installed. Install: `pip install xgboost`",
-        # Tab 7
         "calib_title": "Calibration Plot",
         "calib_xlabel": "Mean predicted risk",
         "calib_ylabel": "Observed positive rate",
@@ -284,7 +269,6 @@ T = {
         "dca_model": "Model",
         "dca_treat_all": "Treat all as high risk",
         "dca_treat_none": "Treat none as high risk",
-        # Tab 8
         "data_title": "Dataset Analysis Panel",
         "data_total": "Total rows",
         "data_model": "Model rows",
@@ -300,13 +284,11 @@ T = {
         "trend_error": "Could not read trend file",
         "trend_time": "Time",
         "trend_value": "Value",
-        # Tab 9
         "pdf_title": "PDF Report",
         "pdf_model_perf": "Model Performance",
         "pdf_include_shap": "Include SHAP chart in PDF",
         "pdf_create_btn": "Generate Report",
         "pdf_download_btn": "Download PDF File",
-        # Tab 10
         "method_title": "Methodology",
         "method_text": ("This research prototype estimates severe preeclampsia risk using platelet, INR, aPTT and fibrinogen values. "
                         "The primary model is logistic regression. SMOTE is applied to the training split to reduce class imbalance, "
@@ -657,46 +639,10 @@ def dataframe_to_excel_bytes(df):
 def pdf_safe_text(value):
     text = "" if value is None else str(value)
     replacements = {
-        "\u00c3\u00a7": "c",
-        "\u00c3\u0087": "C",
-        "\u00c4\u009f": "g",
-        "\u00c4\u0178": "g",
-        "\u00c4\u009e": "G",
-        "\u00c4\u017d": "G",
-        "\u00c4\u00b1": "i",
-        "\u00c4\u00b0": "I",
-        "\u00c3\u00b6": "o",
-        "\u00c3\u0096": "O",
-        "\u00c5\u009f": "s",
-        "\u00c5\u0178": "s",
-        "\u00c5\u009e": "S",
-        "\u00c5\u017d": "S",
-        "\u00c3\u00bc": "u",
-        "\u00c3\u009c": "U",
-        "\u00c2\u00b5": "u",
-        "\u00c2": "",
-        "\u00e2\u0080\u00a2": "-",
-        "\u00e2\u0080\u0093": "-",
-        "\u00e2\u0080\u0094": "-",
-        "\u00e2\u0080\u0099": "'",
-        "\u00e2\u0080\u009c": "\"",
-        "\u00e2\u0080\u009d": "\"",
-        "\u00e2\u0089\u00a5": ">=",
-        "ç": "c",
-        "Ç": "C",
-        "ğ": "g",
-        "Ğ": "G",
-        "ı": "i",
-        "İ": "I",
-        "ö": "o",
-        "Ö": "O",
-        "ş": "s",
-        "Ş": "S",
-        "ü": "u",
-        "Ü": "U",
-        "µ": "u",
-        "•": "-",
-        "≥": ">=",
+        "ç": "c", "Ç": "C", "ğ": "g", "Ğ": "G",
+        "ı": "i", "İ": "I", "ö": "o", "Ö": "O",
+        "ş": "s", "Ş": "S", "ü": "u", "Ü": "U",
+        "µ": "u", "•": "-", "≥": ">=",
     }
     for bad, good in replacements.items():
         text = text.replace(bad, good)
@@ -708,29 +654,15 @@ def pdf_safe_rows(rows):
 
 
 def create_pdf_report(
-    patient_info,
-    labs,
-    risk,
-    threshold,
-    category,
-    acog_pos,
-    checklist,
-    metrics,
-    summary,
-    shap_fig=None,
-    risk_ci=None,
-    range_warnings=None,
-    model_stamp=None,
+    patient_info, labs, risk, threshold, category, acog_pos, checklist,
+    metrics, summary, shap_fig=None, risk_ci=None, range_warnings=None, model_stamp=None,
 ):
     buffer = BytesIO()
     font_regular, font_bold = register_pdf_fonts()
     doc = SimpleDocTemplate(
-        buffer,
-        pagesize=A4,
-        rightMargin=1.6 * cm,
-        leftMargin=1.6 * cm,
-        topMargin=1.5 * cm,
-        bottomMargin=1.5 * cm,
+        buffer, pagesize=A4,
+        rightMargin=1.6 * cm, leftMargin=1.6 * cm,
+        topMargin=1.5 * cm, bottomMargin=1.5 * cm,
     )
     styles = getSampleStyleSheet()
     styles.add(ParagraphStyle(name="AppTitle", fontName=font_bold, fontSize=17, leading=22, textColor=colors.HexColor("#6b3fa0")))
@@ -747,18 +679,14 @@ def create_pdf_report(
 
     def styled_table(rows, widths):
         table = Table(pdf_safe_rows(rows), colWidths=widths)
-        table.setStyle(
-            TableStyle(
-                [
-                    ("FONTNAME", (0, 0), (-1, -1), font_regular),
-                    ("FONTNAME", (0, 0), (-1, 0), font_bold),
-                    ("BACKGROUND", (0, 0), (-1, 0), colors.HexColor("#6b3fa0")),
-                    ("TEXTCOLOR", (0, 0), (-1, 0), colors.white),
-                    ("GRID", (0, 0), (-1, -1), 0.4, colors.HexColor("#d4c6ee")),
-                    ("PADDING", (0, 0), (-1, -1), 6),
-                ]
-            )
-        )
+        table.setStyle(TableStyle([
+            ("FONTNAME", (0, 0), (-1, -1), font_regular),
+            ("FONTNAME", (0, 0), (-1, 0), font_bold),
+            ("BACKGROUND", (0, 0), (-1, 0), colors.HexColor("#6b3fa0")),
+            ("TEXTCOLOR", (0, 0), (-1, 0), colors.white),
+            ("GRID", (0, 0), (-1, -1), 0.4, colors.HexColor("#d4c6ee")),
+            ("PADDING", (0, 0), (-1, -1), 6),
+        ]))
         return table
 
     story.append(Paragraph(pdf_safe_text("Hasta Bilgileri"), styles["AppHeading"]))
@@ -813,6 +741,7 @@ def create_pdf_report(
     buffer.seek(0)
     return buffer
 
+
 st.markdown(
     """
 <style>
@@ -832,9 +761,7 @@ h1, h2, h3 { color: #6b3fa0; }
     background: #fff9d9; color: #8a6a00; border-radius: 8px;
     padding: 16px 18px; font-size: 0.98rem; line-height: 1.45;
 }
-.mulan-warning-icon {
-    font-size: 1.25rem; line-height: 1.4;
-}
+.mulan-warning-icon { font-size: 1.25rem; line-height: 1.4; }
 </style>
 """,
     unsafe_allow_html=True,
@@ -864,9 +791,7 @@ with st.sidebar:
         unsafe_allow_html=True,
     )
 
-# ── Language shortcut (accessible everywhere below) ──────────────────────────
 lang = st.session_state.get("lang", "tr")
-
 
 st.title("🩺 " + T[lang]["page_title"])
 st.caption(T[lang]["page_caption"])
@@ -920,14 +845,13 @@ with tab1:
     st.subheader(T[lang]["lab_values"])
     col_l, col_r = st.columns(2)
     with col_l:
-        platelet = st.number_input("Trombosit / Platelet", value=default_vals["platelet"])
-        inr = st.number_input("INR", value=default_vals["inr"])
+        platelet = st.number_input("Trombosit / Platelet", value=default_vals["f_platelet"])
+        inr = st.number_input("INR", value=default_vals["f_inr"])
     with col_r:
-        aptt = st.number_input("aPTT", value=default_vals["aptt"])
-        fibrinogen = st.number_input("Fibrinojen / Fibrinogen", value=default_vals["fibrinogen"])
+        aptt = st.number_input("aPTT", value=default_vals["f_aptt"])
+        fibrinogen = st.number_input("Fibrinojen / Fibrinogen", value=default_vals["f_fibrinogen"])
 
     strategy = st.selectbox(T[lang]["threshold_opt"], T[lang]["threshold_strategies"])
-    # Map strategy to internal logic key regardless of language
     strategy_map = {v: k for k, v in zip(
         ["Dengeli eşik", "Duyarlılığı önceliklendir", "Özgüllüğü önceliklendir", "Sabit 0.50"],
         T[lang]["threshold_strategies"]
@@ -953,24 +877,22 @@ with tab1:
         st.session_state["risk_ci_key"] = risk_ci_key
     risk_ci = st.session_state.get("risk_ci", None)
 
-    st.session_state.update(
-        {
-            "patient_info": {
-                T[lang]["patient_id"]: patient_id,
-                T[lang]["age"]: str(patient_age),
-                T[lang]["gest_week"]: str(gest_week),
-                T[lang]["gravida"]: gravida_parity,
-            },
-            "labs": {"platelet": platelet, "inr": inr, "aptt": aptt, "fibrinogen": fibrinogen},
-            "risk": risk,
-            "pred": pred_class,
-            "category": category,
-            "thresh": risk_threshold,
-            "clinical_summary": summary_text,
-            "range_warnings": range_messages,
-            "range_df": range_df,
-        }
-    )
+    st.session_state.update({
+        "patient_info": {
+            T[lang]["patient_id"]: patient_id,
+            T[lang]["age"]: str(patient_age),
+            T[lang]["gest_week"]: str(gest_week),
+            T[lang]["gravida"]: gravida_parity,
+        },
+        "labs": {"f_platelet": platelet, "f_inr": inr, "f_aptt": aptt, "f_fibrinogen": fibrinogen},
+        "risk": risk,
+        "pred": pred_class,
+        "category": category,
+        "thresh": risk_threshold,
+        "clinical_summary": summary_text,
+        "range_warnings": range_messages,
+        "range_df": range_df,
+    })
 
     tab1_view = st.radio(
         "Risk Hesaplayıcı Bölümü",
@@ -988,14 +910,12 @@ with tab1:
         metric_cols[4].metric("Specificity", f"{threshold_metrics['specificity']:.3f}")
         if risk_ci:
             st.caption(f"{T[lang]['bootstrap_result']}: %{risk_ci[0] * 100:.1f} - %{risk_ci[1] * 100:.1f}")
-
         if category_level == "error":
             st.error(f"Sınıflandırma: {category}")
         elif category_level == "warning":
             st.warning(f"Sınıflandırma: {category}")
         else:
             st.success(f"Sınıflandırma: {category}")
-
         if range_messages:
             st.warning(T[lang]["range_warning"] + ": " + " ".join(range_messages))
 
@@ -1078,11 +998,8 @@ with tab4:
     if st.button(T[lang]["shap_btn"]):
         with st.spinner(T[lang]["shap_spinner"]):
             shap_df, shap_fig = shap_dataframe(
-                data_sig,
-                model,
-                X_train_scaled,
-                tuple(patient_scaled[0].tolist()),
-                patient_values,
+                data_sig, model, X_train_scaled,
+                tuple(patient_scaled[0].tolist()), patient_values,
             )
         st.session_state["shap_df"] = shap_df
         st.session_state["shap_fig"] = shap_fig
@@ -1135,11 +1052,7 @@ with tab6:
     if st.button(T[lang]["compare_btn"]):
         with st.spinner(T[lang]["compare_spinner"]):
             model_table, fitted_models = train_candidate_models(
-                data_sig,
-                X_train_scaled,
-                y_train_smote,
-                X_test_scaled,
-                y_test,
+                data_sig, X_train_scaled, y_train_smote, X_test_scaled, y_test,
             )
         st.session_state["model_compare_table"] = model_table
 
