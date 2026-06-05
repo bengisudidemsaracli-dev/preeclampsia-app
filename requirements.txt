@@ -2,8 +2,9 @@ streamlit
 pandas
 numpy
 matplotlib
-scikit-learn
-imbalanced-learn
+scipy
+scikit-learn==1.8.0
+imbalanced-learn==0.14.1
 reportlab
 shap
 xgboost
